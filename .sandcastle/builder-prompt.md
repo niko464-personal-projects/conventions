@@ -15,8 +15,8 @@ CONTEXT.md, when the repo has one, is the settled design: read it first and don'
 
 1. **Read the ticket**: `gh issue view {{ISSUE}} --comments`. If it is a child of a wayfinder map (a `wayfinder:map` parent issue), call the Skill tool with `mattpocock-skills:wayfinder` and follow the map's Notes, except for delivery, which follows this prompt: don't edit the map body or close the ticket, since other agents work the same map in parallel.
 2. **Build** exactly what the ticket asks, with the skills it or its map names (`tdd`, `domain-modeling`, `codebase-design`, …). Commit on `{{BRANCH}}`. When the pre-commit hook fails, fix what it reports and commit again, never `--no-verify`.
-3. **Verify like CI**: `{{VERIFY}}`. Fix every failure.
-4. **Catch up**: `git fetch origin {{DEFAULT_BRANCH}} && git rebase origin/{{DEFAULT_BRANCH}}`. Resolve conflicts (Skill tool: `mattpocock-skills:resolving-merge-conflicts`), and if anything changed, verify like CI again.
+3. **Test your change**: run the tests you added or changed, plus any you think your change could affect. Run single files or filtered tests, never the whole suite: CI runs everything. Fix every failure.
+4. **Catch up**: `git fetch origin {{DEFAULT_BRANCH}} && git rebase origin/{{DEFAULT_BRANCH}}`. Resolve conflicts (Skill tool: `mattpocock-skills:resolving-merge-conflicts`), and rerun tests only for files where you resolved a conflict.
 5. **Open the PR**: `git push --force-with-lease -u origin {{BRANCH}}`, then `gh pr create --base {{DEFAULT_BRANCH}}` with the ticket title and this body:
 
    ```markdown
