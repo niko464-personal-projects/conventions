@@ -5,7 +5,7 @@ The one description of the stack for Niko464's TypeScript projects. Decided in [
 ## Layout
 
 - pnpm workspaces with Turborepo: `apps/web`, `apps/api`, `packages/schemas`, plus `packages/<domain>` when one is needed.
-- `turbo.json` declares task order (`dependsOn`), so no root script chains builds by hand. Turbo's cache skips unchanged packages, locally and on the VPS runner.
+- `turbo.json` declares task order (`dependsOn`), so no root script chains builds by hand. Turbo's cache skips unchanged packages locally, and on the VPS runner only when the project keeps the cache in `$HOME` (see [CI on a self-hosted runner](#ci-on-a-self-hosted-runner)); a runner that wipes it caches nothing.
 
 ## Backend
 
@@ -49,3 +49,17 @@ Every ticket's sandbox runs the project's tests against a real Postgres, with it
 - `.sandcastle/project.yaml` starts the compose Postgres with `services:` (e.g. `docker compose up --detach --wait postgres`), and sets `TEST_DATABASE_URL` in `env:` to `postgresql://…@host.docker.internal:5432/<name>_test_{{ISSUE}}`, so parallel sandboxes never share a database.
 - The compose Postgres listens beyond `127.0.0.1`, so sandboxes reach it through `host.docker.internal`.
 - The test setup uses `TEST_DATABASE_URL` when it is set, creating and migrating that database, instead of starting its own container.
+
+## CI on a self-hosted runner
+
+The VPS runner keeps `$HOME`, wipes `runner.temp` after each job, and `actions/checkout` cleans the checkout. Anything meant to survive a job goes in `$HOME`.
+
+- Install with `--store-dir "$HOME/.pnpm-store"`. Never set `cache: pnpm` or `cache: true`: saving and restoring a store the runner already keeps cost a median 22s to 352s more per job on PC2, across six projects.
+- Never run `pnpm store prune` in a PR job. Runners share the store, and a prune can delete what another install has not linked yet.
+- Keep Turbo's cache in `$HOME/.cache/<project>-turbo`, with `TURBO_CACHE_MAX_SIZE` and `TURBO_CACHE_MAX_AGE` set, because `$HOME` fills up.
+- A kept Turbo cache replays stale passes unless it knows the inputs. Put root config in `globalDependencies`, and put the lockfile and `ci.yml` (which pins service images) in the `inputs` of the tests that depend on them.
+- `test` depends on `lint`, `typecheck` and `build`, so they don't compete for the runner's memory.
+- Size test workers from the CPU count, not from a guess, and print the CPUs and workers when the suite starts. Sandboxes keep a low `TEST_MAX_WORKERS` because they share a machine.
+- Agent sessions run the tests for what they changed. CI runs the whole suite. A project prompt must not tell a session to run it.
+- A run that replays cached tests measures nothing, so don't use it as proof of test speed.
+- On `ubuntu-latest` the runner starts empty, so none of the `$HOME` rules apply and `cache: pnpm` stays.
