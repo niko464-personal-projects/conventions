@@ -13,6 +13,7 @@ The one description of the stack for Niko464's TypeScript projects. Decided in [
 - PostgreSQL through Prisma (`@prisma/adapter-pg`). Dev, CI and previews run Postgres in `docker compose`; production uses a hosted Postgres (usually Neon), never a self-hosted one.
 - Media through the S3 API only. Dev, CI and previews run SeaweedFS in `docker compose`; production uses external storage (usually AWS S3), never a self-hosted one. Switching is configuration (`S3_*` env vars), not code.
 - Auth: our own DB-backed session cookies (httpOnly), passwords hashed with argon2. No auth vendor.
+- Every login a seed or demo script creates has the password `azertyazerty`, in every environment that is seeded (local, CI, previews, staging), so Niko never looks one up. Production is never seeded.
 
 ## API contract
 
