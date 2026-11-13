@@ -64,3 +64,11 @@ The VPS runner keeps `$HOME`, wipes `runner.temp` after each job, and `actions/c
 - Agent sessions run the tests for what they changed. CI runs the whole suite. A project prompt must not tell a session to run it.
 - A run that replays cached tests measures nothing, so don't use it as proof of test speed.
 - On `ubuntu-latest` the runner starts empty, so none of the `$HOME` rules apply and `cache: pnpm` stays.
+
+## GitHub storage and minutes
+
+Both orgs are on GitHub Free with a $0 budget: 0.5 GB of Actions storage and 2,000 hosted minutes a month (Windows counts double). Going over blocks every hosted job, deploys included, until the month ends. Each org keeps artifacts and logs for 3 days.
+
+- Upload an artifact only when someone will open it: on `failure()`, or on a run started by hand (`workflow_dispatch`). Never on every run, and never from a scheduled job. Set `retention-days: 3`.
+- Save a GitHub cache (`actions/cache`, `Swatinem/rust-cache`, `type=gha` in `docker/build-push-action`) only from the default branch, such as `save-if: ${{ github.ref == 'refs/heads/main' }}`: no other PR can restore a cache a PR saves. On the VPS runner, keep caches in `$HOME` instead.
+- Run hosted Windows or macOS jobs only on `workflow_dispatch` or a PR label.
