@@ -34,7 +34,10 @@ The one description of the stack for Niko464's TypeScript projects. Decided in [
   - Public pages are cached with `revalidate` (ISR); `revalidatePath` refreshes one at once after an admin change. Pages that depend on the logged-in user render per request.
   - TanStack Query is installed, for client components that mutate or refetch, seeded from the server with `prefetchQuery` and `HydrationBoundary`.
   - Next only renders: no API routes, no server actions that touch data.
-- Any other project uses React Router. Loaders start each query with `queryClient.ensureQueryData`; components read it with `useQuery`.
+- Any other project uses React Router. Components read server data with `useQuery`.
+  - A loader starts each query and ignores a rejection, so a failed request shows the component's own error state from `useQuery` instead of React Router's error page.
+  - Pattern: wedding_photos' `preload()` in `apps/web/src/lib/preload.ts`, which calls `ensureQueryData` or `ensureInfiniteQueryData` and adds `.catch(() => undefined)`.
+  - Exception: a loader that needs the data to decide, such as a session check that redirects, awaits it and lets it reject.
 - UI: shadcn/ui on Tailwind v4, checked by `@shadcn/lint`. Effects only through `@niko464/react-kit`. Animations with Motion, when a project animates.
 
 ## Tooling
