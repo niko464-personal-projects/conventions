@@ -4,7 +4,7 @@
   "description": "Shared ESLint flat-config blocks: a comment ban, an effect-hook ban and @shadcn/lint",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Niko464/conventions.git",
+    "url": "git+https://github.com/niko464-personal-projects/conventions.git",
     "directory": "packages/eslint-config"
   },
   "license": "MIT",
