@@ -171,7 +171,81 @@ describe('react: @niko464/no-effect-hooks', () => {
       ruleId: '@niko464/no-effect-hooks',
       severity: 2,
       message:
-        'useLayoutEffect is banned. Use useMountEffect, useEventListener or useInterval from @niko464/react-kit, a key, a ref callback, deriving the value during render, or Motion for animation. A case none of these covers becomes a new hook in @niko464/react-kit, through a PR.',
+        'useLayoutEffect is banned. Use useMountEffect, useEventListener or useInterval from @niko464/react-kit, a key, deriving the value during render, or Motion for animation. A case none of these covers becomes a new hook in @niko464/react-kit, through a PR.',
+    });
+  });
+
+  it.each([
+    [
+      'an inline ref arrow returning an arrow',
+      'export const A = () => (\n  <div\n    ref={(node) => {\n      const observer = new IntersectionObserver(() => undefined);\n      observer.observe(node);\n      return () => observer.disconnect();\n    }}\n  />\n);\n',
+    ],
+    [
+      'an inline ref arrow whose body is an arrow',
+      'export const A = () => <div ref={(node) => () => node.remove()} />;\n',
+    ],
+    [
+      'an inline ref function expression returning a function expression',
+      'export const A = () => (\n  <div\n    ref={function (node) {\n      return function () {\n        node.remove();\n      };\n    }}\n  />\n);\n',
+    ],
+    [
+      'a const arrow ref returning a function',
+      'const poll = (node) => {\n  const id = setInterval(() => node.focus(), 1000);\n  return function stop() {\n    clearInterval(id);\n  };\n};\nexport const A = () => <div ref={poll} />;\n',
+    ],
+    [
+      'a useCallback ref returning a function',
+      "import { useCallback } from 'react';\nexport const A = () => {\n  const watch = useCallback((node) => {\n    const id = setInterval(() => node.focus(), 1000);\n    return () => clearInterval(id);\n  }, []);\n  return <div ref={watch} />;\n};\n",
+    ],
+    [
+      'a React.useCallback ref returning a function',
+      "import React from 'react';\nexport const A = () => {\n  const watch = React.useCallback(function (node) {\n    return () => node.remove();\n  }, []);\n  return <div ref={watch} />;\n};\n",
+    ],
+    [
+      'a function declaration ref returning a named cleanup function',
+      'function stop() {\n  return undefined;\n}\nfunction watch(node) {\n  node.focus();\n  return stop;\n}\nexport const A = () => <div ref={watch} />;\n',
+    ],
+    [
+      'a ref returning a const arrow cleanup on one branch',
+      'export const A = () => (\n  <div\n    ref={(node) => {\n      if (!node) return;\n      const cleanup = () => node.remove();\n      return cleanup;\n    }}\n  />\n);\n',
+    ],
+  ])('reports %s', async (_, code) => {
+    expect(await ruleIds(code)).toEqual(['@niko464/no-effect-hooks']);
+  });
+
+  it.each([
+    [
+      'an inline ref that only focuses the node',
+      'export const A = () => <input ref={(node) => node?.focus()} />;\n',
+    ],
+    [
+      'a useCallback ref that stores the node and returns nothing',
+      "import { useCallback, useState } from 'react';\nexport const A = () => {\n  const [node, setNode] = useState(null);\n  const store = useCallback((next) => {\n    setNode(next);\n  }, []);\n  return <div ref={store}>{String(node)}</div>;\n};\n",
+    ],
+    [
+      'a ref whose nested callback returns a function',
+      "export const A = () => (\n  <div\n    ref={(node) => {\n      node?.addEventListener('click', () => () => undefined);\n    }}\n  />\n);\n",
+    ],
+    [
+      'a ref object',
+      "import { useRef } from 'react';\nexport const A = () => {\n  const node = useRef(null);\n  return <div ref={node} />;\n};\n",
+    ],
+    [
+      'a ref callback that returns a value that is not a function',
+      'const count = 1;\nconst measure = (node) => {\n  node?.getBoundingClientRect();\n  return count;\n};\nexport const A = () => <div ref={measure} />;\n',
+    ],
+  ])('allows %s', async (_, code) => {
+    expect(await lint(code)).toEqual([]);
+  });
+
+  it('says a ref callback may not return a cleanup and names the replacements', async () => {
+    const [message] = await lint(
+      'export const A = () => <div ref={(node) => () => node.remove()} />;\n',
+    );
+    expect(message).toEqual({
+      ruleId: '@niko464/no-effect-hooks',
+      severity: 2,
+      message:
+        'A ref callback may not return a cleanup: React runs it as an effect. Use useMountEffect, useEventListener or useInterval from @niko464/react-kit. A case none of these covers becomes a new hook in @niko464/react-kit, through a PR.',
     });
   });
 

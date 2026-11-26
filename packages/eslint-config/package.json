@@ -1,6 +1,6 @@
 {
   "name": "@niko464/eslint-config",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Shared ESLint flat-config blocks: a comment ban, an effect-hook ban and @shadcn/lint",
   "repository": {
     "type": "git",

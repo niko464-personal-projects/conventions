@@ -83,6 +83,6 @@ const Slideshow = ({ photos, paused }: { photos: Photo[]; paused: boolean }) => 
 | To                                       | Use                                                                                                    |
 | ---------------------------------------- | ------------------------------------------------------------------------------------------------------ |
 | Start over when a value changes          | A `key` with that value, so React mounts a new component                                               |
-| Measure, place or set up a DOM node      | A ref callback: `<img ref={(node) => place(node)} />`, which may return a cleanup                      |
+| Measure, place or set up a DOM node      | A ref callback: `<img ref={(node) => place(node)} />`, which may not return a cleanup                  |
 | Keep a value in sync with props or state | Derive it during render: `const total = items.reduce(…)`, not a state that an effect updates           |
 | Animate                                  | [Motion](https://motion.dev): `<motion.div animate={{ x }} />`, its `useSpring`, and `drag` for swipes |
