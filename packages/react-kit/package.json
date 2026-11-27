@@ -4,7 +4,7 @@
   "description": "React hooks that replace useEffect: useMountEffect, useEventListener and useInterval",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Niko464/conventions.git",
+    "url": "git+https://github.com/niko464-personal-projects/conventions.git",
     "directory": "packages/react-kit"
   },
   "license": "MIT",
